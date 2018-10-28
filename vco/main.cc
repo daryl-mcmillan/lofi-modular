@@ -18,15 +18,18 @@ int read1() {
 
 int main(void) {
 
+  // configure pwm on pins 5 and 6 ( AIN0 and AIN1 )
   DDRB = 1 + 2;
   TCCR0A = (1<<COM0A1) | (0<<COM0A0) | (1<<COM0B1) | (0<<COM0B0) | (1<<WGM01) | (1<<WGM00);
   TCCR0B = (0<<WGM02) | (0<<CS02) | (0<<CS01) | (1<<CS00);
   OCR0A = 0x80;
   OCR0B = 255;
  
-  // toggle portB pin 0
-  //DDRB = 1;
-  //PORTB = 1;
+  // configure analog input on pin 2 ( ADC3 )
+  DIDR0 = ( 1 << ADC3D );
+  ADMUX = ( 0 << REFS0 ) | ( 1 << ADLAR ) | ( 1 << MUX1 ) | ( 1 << MUX0 );
+  ADCSRB = 0;
+  ADCSRA = ( 1 << ADEN ) | ( 1 << ADSC ) | ( 1 << ADATE ) | ( 0 << ADIF ) | ( 0 << ADIE ) | ( 1 << ADPS2 ) |( 0 << ADPS1 ) | ( 1 << ADPS0 );
 
   unsigned char value = 0;
   for( ;; ) {
@@ -36,10 +39,16 @@ int main(void) {
     //out1( 255);
     //_delay_ms(500);
     //out1(0);
-    _delay_ms(4);
-    value = value + 1;
-    out1( value );
-    out2( 255 - value );
+    unsigned int readval = ADC >> 12;
+    readval += 1;
+    while( readval ) {
+      _delay_ms(100);
+      out1( 255 );
+      _delay_ms(100);
+      out1(0);
+      readval--;
+    }
+    _delay_ms(400);
   }
 
 }
